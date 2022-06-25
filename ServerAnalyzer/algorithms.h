@@ -1,21 +1,27 @@
 #ifndef ALGORITHMS_H
 #define ALGORITHMS_H
-#include <QVariant>
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
 
 
-    //базовый абстрактный класс для алгоритма
+    //базовый абстрактный класс для алгоритма анализа тектового файла
 class Algorithm
 {
 
 public:
-    qint64 fileSize;
-    QVariant Words;
-    Algorithm();
+    Algorithm(QString filepath);
     virtual ~Algorithm() = 0;
-    virtual QVariant analyzeText(QString filepath);
+    QStringList Words;  //список слов
+    QString getFilepath();
+    quint64 getFileSize();
+    virtual void analyzeText() = 0;
+
+
+private:
+    quint64 _fileSize;
+    QString _filepath;
+    void decomposeFile();   //алгоритм разбиения текста из файла на слова
 };
 
 

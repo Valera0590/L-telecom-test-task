@@ -1,28 +1,40 @@
 #include "distributionwordsbylength.h"
 
-DistributionWordsByLength::DistributionWordsByLength():Algorithm(){}
+//DistributionWordsByLength::DistributionWordsByLength():Algorithm(){}
+DistributionWordsByLength::DistributionWordsByLength(QString filepath):Algorithm(filepath){}
 DistributionWordsByLength::~DistributionWordsByLength(){}
-QVariant DistributionWordsByLength::analyzeText(QString filepath)
+void DistributionWordsByLength::analyzeText()   //анализ текста из файла для распрделения слов по длинам
 {
-    qDebug() << "DistributionWordsByLength.analyzeText was called.....";
-    QFile file(filepath);
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+    DistByLengthWords.clear();
+    //qDebug() << "DistributionWordsByLength.analyzeText was called....." << getFileSize();
+    foreach (QString word, Words)
     {
-        while(!file.atEnd())
+        int i = 0;
+        while(i<word.length())   //избавляемся от всех символов в слове, кроме букв
         {
-            //читаем строку
-            QString str = file.readLine();
-            //Делим строку на слова разделенные пробелом
-            QStringList lst = str.split(" ");
-              // выводим первых четыре слова
-            qDebug() << lst.at(0) << lst.at(1) << lst.at(2) << lst.at(3);
+            if(word.at(i).isLetter())   i++;
+            else    word = word.remove(i,1);
+        }
+        int lengthWord = word.length();
+        if (lengthWord > 0)
+        {
+                //заполняем контейнер, распределяя по кол-ву букв в слове
+            if(!DistByLengthWords.empty() && DistByLengthWords.contains(lengthWord))
+            {
+                int countWord = DistByLengthWords.value(lengthWord);    //кол-во слов с такой же длиной, как текущее
+                DistByLengthWords.insert(lengthWord, ++countWord);
+            }
+            else
+            {
+                DistByLengthWords.insert(lengthWord,1);
+            }
         }
     }
-    else
-    {
-        qDebug()<< "don't open file";
+        //вывод в консоль
+    QMapIterator<int, int> i(DistByLengthWords);
+    while (i.hasNext()) {
+        i.next();
+        qDebug() <<"There are "<< i.key() << " character words : " << i.value();
     }
 
-    QVariant qv;
-    return qv;
 }

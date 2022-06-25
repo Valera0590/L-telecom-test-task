@@ -9,6 +9,7 @@
 class Server: public QObject
 {
     Q_OBJECT
+        //свойство связывающее
     Q_PROPERTY(QString filepath READ getFilepath WRITE setFilepath NOTIFY filepathChanged)
 
 public:
@@ -16,15 +17,15 @@ public:
     ~Server();
     QString getFilepath();
     void setFilepath(const QString &filepath);
-    QString cutToRigthFilepath(QString fp);
+    QString cutToRigthFilepath(QString fp);     //убирает лишние символы перед действительным путем до файла
 
 signals:
-    void filepathChanged();
+    void filepathChanged();     //сигнал при изменении пути к файлу в коде
 
 public slots:
          // функция публичного слота доступна в QML
-    void slotFilepathChange(QString str); // Слот-функция без параметров
-    void slotFileReadyForAnalyze();
+    void slotFilepathChange(QString str);   //слот-функция при изменении пути из-под интерфейса
+    void slotFileReadyForAnalyze();     //слот-функция для начала анализа файла
 
 private:
     QString _filepath;

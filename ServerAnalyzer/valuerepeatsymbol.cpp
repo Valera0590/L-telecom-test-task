@@ -1,29 +1,54 @@
 #include "valuerepeatsymbol.h"
 
-ValueRepeatSymbol::ValueRepeatSymbol():Algorithm(){}
+//ValueRepeatSymbol::ValueRepeatSymbol():Algorithm(){}
+ValueRepeatSymbol::ValueRepeatSymbol(QString filepath):Algorithm(filepath){}
 ValueRepeatSymbol::~ValueRepeatSymbol(){}
-QVariant ValueRepeatSymbol::analyzeText(QString filepath)
+void ValueRepeatSymbol::analyzeText()       //анализ текста из файла для вычисления количества повторений каждого символа
 {
-    qDebug() << "ValueRepeatSymbol.analyzeText was called.....";
-    QFile file(filepath);
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+    valueOfRepeat.clear();
+    //qDebug() << "ValueRepeatSymbol.analyzeText was called....." << getFileSize();
+
+    foreach (QString word, Words)      //разбор каждого слова на символы и заполнение контейнера с кол-вом символов
     {
-        while(!file.atEnd())
+        while(!word.isEmpty())
         {
-            //читаем строку
-            QString str = file.readLine();
-            //Делим строку на слова разделенные пробелом
-            QStringList lst = str.split(" ");
-              // выводим первых три слова
-            qDebug() << lst.at(0) << lst.at(1)<< lst.at(2);
+            if(word.at(0).isLetter())
+            {
+                QChar nextCharacter = word.at(0).toLower();
+                if(!valueOfRepeat.empty() && valueOfRepeat.contains(nextCharacter))
+                {
+                    int countCharacter = valueOfRepeat.value(nextCharacter);
+                    valueOfRepeat.insert(nextCharacter, ++countCharacter);
+                }
+                else
+                {
+                    valueOfRepeat.insert(nextCharacter,1);
+                }
+            }
+            else
+            {
+                QChar nextCharacter = word.at(0);
+
+                if(!valueOfRepeat.empty() && valueOfRepeat.contains(nextCharacter))
+                {
+                    int countCharacter = valueOfRepeat.value(nextCharacter);
+                    valueOfRepeat.insert(nextCharacter, ++countCharacter);
+                }
+                else
+                {
+                    valueOfRepeat.insert(nextCharacter,1);
+                }
+
+            }
+            word = word.remove(0,1);
         }
     }
-    else
-    {
-        qDebug()<< "don't open file";
+        //вывод в консоль
+    QMapIterator<QChar, int> i(valueOfRepeat);
+    while (i.hasNext()) {
+        i.next();
+        qDebug() << i.key() << " : " << i.value();
     }
-    QVariant qv1;
-    return qv1;
 }
 
 
