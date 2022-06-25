@@ -12,9 +12,10 @@ class Algorithm
 
 public:
     qint64 fileSize;
+    QVariant Words;
     Algorithm();
     virtual ~Algorithm() = 0;
-    virtual QVariant analyzeText(Algorithm* alg, QFile file) = 0;
+    virtual QVariant analyzeText(QString filepath);
 };
 
 

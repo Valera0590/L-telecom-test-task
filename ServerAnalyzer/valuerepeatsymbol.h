@@ -4,14 +4,14 @@
 
 
     //класс алгоритма определения количества повторений каждого символа
-class ValueRepeatSymbol: Algorithm
+class ValueRepeatSymbol: public Algorithm
 {
 
 public:
     qint64 fileSize;
     explicit ValueRepeatSymbol();
     ~ValueRepeatSymbol() override;
-    QVariant analyzeText(Algorithm* alg, QFile file) override;
+    QVariant analyzeText(QString filepath) override;
 
 };
 

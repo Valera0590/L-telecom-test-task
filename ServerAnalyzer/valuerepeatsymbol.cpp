@@ -2,8 +2,10 @@
 
 ValueRepeatSymbol::ValueRepeatSymbol():Algorithm(){}
 ValueRepeatSymbol::~ValueRepeatSymbol(){}
-QVariant ValueRepeatSymbol::analyzeText(Algorithm *alg, QFile file)
+QVariant ValueRepeatSymbol::analyzeText(QString filepath)
 {
+    qDebug() << "ValueRepeatSymbol.analyzeText was called.....";
+    QFile file(filepath);
     if(file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         while(!file.atEnd())

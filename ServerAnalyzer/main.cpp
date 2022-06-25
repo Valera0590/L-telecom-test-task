@@ -5,6 +5,11 @@
 #include "distributionwordsbylength.h"
 #include "server.h"
 #include <QtQuickControls2>
+#include <QQmlComponent>
+#include <QQmlProperty>
+#include <QQmlContext>
+
+
 
 
 
@@ -14,8 +19,11 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
     app.setOrganizationName("L-telecom");
-    app.setOrganizationDomain("L-telecom Domain");
+    app.setOrganizationDomain("ltelecom.ru");
     QQmlApplicationEngine engine;
+
+    qmlRegisterType<Server>("CPP.MyComponents",1,0,"Server");
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
@@ -24,8 +32,8 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
     engine.load(url);
 
-    Server s;
-    s.startServer();
+    Server serv;
+
 
     return app.exec();
 }

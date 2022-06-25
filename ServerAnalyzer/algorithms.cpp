@@ -2,10 +2,17 @@
 
 Algorithm:: Algorithm(){}
 Algorithm:: ~Algorithm(){}
-QVariant Algorithm::analyzeText(Algorithm *alg, QFile file)
+QVariant Algorithm::analyzeText(QString filepath)
 {
-    QFileInfo fileInfo(file);
-    fileSize = fileInfo.size();
+    QFile file(filepath);
+    if (file.exists() == true)
+    {
+        QFileInfo fileInfo(file);
+        fileSize = fileInfo.size();
+        qDebug() << fileSize << "bytes";
+
+    }
+    else qDebug() << "File not found!";
     QVariant qv2;
     return qv2;
 }

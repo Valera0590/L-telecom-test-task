@@ -4,14 +4,14 @@
 
 
     //класс алгоритма распределения слов по их длинам
-class DistributionWordsByLength: Algorithm
+class DistributionWordsByLength: public Algorithm
 {
 
 public:
     qint64 fileSize;
     explicit DistributionWordsByLength();
     ~DistributionWordsByLength() override;
-    QVariant analyzeText(Algorithm* alg, QFile file) override;
+    QVariant analyzeText(QString filepath) override;
 };
 
 #endif // DISTRIBUTIONWORDSBYLENGTH_H
