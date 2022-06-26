@@ -4,42 +4,46 @@
 Server::Server()
 {
         //связывание сигнала о новом файле со слотом анализа файла
-    connect(this, SIGNAL(filepathChanged()), this, SLOT(slotFileReadyForAnalyze()));
+    //connect(this, SIGNAL(filepathChanged()), this, SLOT(slotFileReadyForAnalyze(QString strFilepath)));
+
+
+    udpSocket = new QUdpSocket(this);   //coздаëм обьект соkета QUdpSocket
+
+    udpSocket->bind(QHostAddress::Broadcast, 2222); //задаём широковещательный адрес и порт на который сокет будет получать данные
+    connect (udpSocket, SIGNAL (readyRead()), this, SLOT (slotUDPReadingData()));  //для получения и отображения данныx соединяем сигнал сокета со слотом
+
+    qDebug() << "Server start listening udp socket with port 2222";
+
+
 }
 Server::~Server(){}
 
-QString Server::getFilepath()
+void Server::slotUDPReadingData()
 {
-    return _filepath;
+    while(udpSocket->hasPendingDatagrams())
+    {
+        QByteArray datagram;
+        datagram.resize(udpSocket->pendingDatagramSize());  //узнаем размер ждущей обработки "датаграммы"
+        udpSocket->readDatagram(datagram.data(),datagram.size(), &sender, &senderPort); //читаем данные
+        qDebug()<<"";
+        qDebug()<<datagram.data()<<"IP: " + sender.toString()<<"Port: "+QString("%1").arg(senderPort);
+        message = datagram.data();
+    }
+    //QString str = sender.toString();    //ip клиента
+    qDebug()<<"";
+    qDebug() <<"Client connected with server by udp - "<<message<<".\nSend to clientserver's ip on new port: " << quint16(senderPort)+1;
+    //QThread::msleep(200);   //пауза для завершения установки порта прослушивания в клиентском приложении
+
+    ServerListener* srv = new ServerListener(portTcpServer);
+    listeners.append(srv);
+
+    QString st = QString("%1").arg(portTcpServer);
+    portTcpServer++;
+
+    qDebug() << st;
+    udpSocket->writeDatagram(st.toUtf8(), QHostAddress::Broadcast, int(senderPort)+1);  //отправляем данные по широковешательному адресу на порт 2222
 }
 
-void Server::setFilepath(const QString &filepath)
-{
-    qDebug() << "Path:  " << filepath;
-    _filepath = filepath;
-    emit filepathChanged();
-}
 
-QString Server::cutToRigthFilepath(QString fp)  //убирает лишние символы перед действительным путем до файла
-{
-    QString rightFilepath = fp.remove(0,6);
-    setFilepath(rightFilepath);
-    return rightFilepath;
-}
-
-void Server::slotFilepathChange(QString str)    //слот-функция при изменении пути из-под интерфейса
-{
-    qDebug() << "slotFilepathChange " << str;
-    cutToRigthFilepath(str);
-}
-
-void Server::slotFileReadyForAnalyze()      //слот-функция для начала анализа файла
-{
-    QString filepth = getFilepath();
-    Algorithm* alg1 = new ValueRepeatSymbol(filepth);
-    alg1->analyzeText();
-    alg1 = new DistributionWordsByLength(filepth);
-    alg1->analyzeText();
-}
 
 
