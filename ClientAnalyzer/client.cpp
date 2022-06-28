@@ -1,11 +1,14 @@
 #include "client.h"
 
+//Client::Client(QQmlApplicationEngine& db){}
+
 Client::Client()
 {
     udpSocket = new QUdpSocket(this);   //coздаëм обьект соkета QUdpSocket
     connect (udpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingUDPData()));  //для получения и отображения данныx соединяем сигнал сокета со слотом
     //связывание сигнала о новом файле со слотом анализа файла
     //connect(this, SIGNAL(filepathChanged()), this, SLOT(slotFileReadyForAnalyze()));
+
 }
 
 Client::~Client()
@@ -85,7 +88,7 @@ void Client::slotFilepathChange(QString str)    //слот-функция при
         sendFile = new QFile(filePath);
         timer = new QTimer(this);
         connect(timer, SIGNAL(timeout()), this, SLOT(timeoutToSendFile())); // Подключаем сигнал таймера к нашему слоту
-        timer->start(500);
+        timer->start(500);      //ставим задержку в полсекунды перед отправкой серверу файла
     }
     else
     {
@@ -94,6 +97,23 @@ void Client::slotFilepathChange(QString str)    //слот-функция при
     }
 }
 
+void Client::slotMakeRequestToServer()
+{
+    qDebug() << "Send to server request";
+    QDataStream stream(tcpSocket);
+    stream.setVersion(QDataStream::Qt_5_12);
+
+    QString requestMessage="request data";
+    stream << requestMessage;
+    tcpSocket->waitForBytesWritten();
+}
+
+/*ListModel Client::slotGetModelTable()
+{
+
+    return mymodel;
+}*/
+
 void Client::slotReadingTcpData()
 {
     qDebug() << "reading tcpSocket.";
@@ -101,27 +121,98 @@ void Client::slotReadingTcpData()
     in.setVersion(QDataStream::Qt_5_12);
     if(in.status() == QDataStream::Ok)
     {
-        QString str;
-        in >> str;
-        QStringList strList = str.split(";");
-        if(str == "You were connecting")  //если получено сообщение о подключении клиента
+        if(!gettingInfoDB && !gettingInfoFile)
         {
-           qDebug() << str;
-        }
-        else if(strList.value(0) == "database")   //обработчик базы данных запросов пользователя
-        {
-            strList.removeFirst();
-            while(!strList.isEmpty())
+            QString str;
+            in >> str;
+            QStringList strList = str.split(";");
+            if(str == "You were connecting")  //если получено сообщение о подключении клиента
             {
-                qDebug() << strList.value(0) << " | " << strList.value(1) << " | " << strList.value(2);
-                for(int i=0;i<3;++i)    strList.removeFirst();
+                qDebug() << str;
+            }
+            else if(strList.value(0) == "database")   //обработчик базы данных запросов пользователя
+            {
+                gettingInfoDB = true;
+                //strList.removeFirst();
+                while(!strList.isEmpty())
+                {
+                    qDebug() << strList.value(0) << " | " << strList.value(1) << " | " << strList.value(2);
+                    for(int i=0;i<3;++i)    strList.removeFirst();
+                }
+                /*if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
+                {
+                    QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
+                    qDebug() << "File had removed!";
+                    //database.closeDataBase();
+                }*/
+                //emit databaseUpdate();
+            }
+            else if(strList.value(0) == "fileInfo") //обработчик загруженного на сервер файла
+            {
+                gettingInfoFile = true;
+                qDebug() << "Get info about analyzing file...";
+                qDebug() << str;
+
             }
         }
-        else if(strList.value(0) == "fileInfo") //обработчик загруженного на сервер файла
+        else if(gettingInfoDB)  //получение базы данных
         {
-            qDebug() << "Get info about analyzing file...";
-            qDebug() << str;
+            in.startTransaction();
+            in >> tmpBlock;
+            if (!in.commitTransaction())    //ждём полной передачи файла через сокет
+                return;
+            if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
+            {
+                QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
+                qDebug() << "File had removed!";
+                //database.closeDataBase();
+            }
+            QFile file(QDir::currentPath()+"/" DATABASE_NAME);
 
+            if(file.open(QIODevice::WriteOnly))
+            {
+                file.write(tmpBlock);
+                qDebug() << "\nData has been written to a file!";
+            }
+            else
+            {
+                qDebug() << "\nThe file don't open to write a data!";
+                return;
+            }
+            file.close();
+            qDebug() << "SERVER: END - bytesAvailable:" << tcpSocket->bytesAvailable();
+            // Очистка переменных
+            tmpBlock.clear();
+            gettingInfoDB = false;
+            emit databaseUpdate();
+            qDebug() << "Signal databaseUpdate!";
+            // Подключаемся к базе данных
+            //database.connectToDataBase();
+
+            // инициализируем модель данных
+            //mymodel = new ListModel();
+        }
+        else if(gettingInfoFile)
+        {
+            QMap<QChar, int> valueOfRepeat;
+            QMap<int, int> distByLength;
+            in >> valueOfRepeat;
+            in >> distByLength;
+                //вывод в консоль
+            QMapIterator<QChar, int> i(valueOfRepeat);
+            while (i.hasNext())
+            {
+                i.next();
+                qDebug() << i.key() << " : " << i.value();
+            }
+                //вывод в консоль
+            QMapIterator<int, int> j(distByLength);
+            while (j.hasNext())
+            {
+                j.next();
+                qDebug() <<"There are "<< j.key() << " character words : " << j.value();
+            }
+            gettingInfoFile = false;
         }
     }
     else

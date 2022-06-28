@@ -49,6 +49,7 @@ void ValueRepeatSymbol::analyzeText()       //анализ текста из ф�
         i.next();
         qDebug() << i.key() << " : " << i.value();
     }
+
 }
 
 

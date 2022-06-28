@@ -16,7 +16,11 @@ Server::Server()
 
 
 }
-Server::~Server(){}
+Server::~Server()
+{
+    delete udpSocket;
+    listeners.clear();
+}
 
 void Server::slotUDPReadingData()
 {
@@ -32,7 +36,7 @@ void Server::slotUDPReadingData()
     //QString str = sender.toString();    //ip клиента
     qDebug()<<"";
     qDebug() <<"Client connected with server by udp - "<<message<<".\nSend to clientserver's ip on new port: " << quint16(senderPort)+1;
-    //QThread::msleep(200);   //пауза для завершения установки порта прослушивания в клиентском приложении
+    QThread::msleep(200);   //пауза для завершения установки порта прослушивания в клиентском приложении
 
     ServerListener* srv = new ServerListener(portTcpServer);
     listeners.append(srv);

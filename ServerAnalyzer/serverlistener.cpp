@@ -5,11 +5,13 @@ ServerListener::ServerListener(quint16 port)
     filePath.clear();
     fileSize = 0;
     tmpBlock.clear();
-    fileCopy = QDir::tempPath()+"/"; // временная замена имени файла
+    fileCopy = QDir::currentPath()+"/"; // временная замена имени файла
     qDebug() << fileCopy;
     startTcpServerListening(port);
+    if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
+        QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
+    database.connectToDataBase();
 }
-
 
 ServerListener::~ServerListener(){}
 
@@ -62,12 +64,17 @@ void ServerListener::slotReadyReadTcp()
             {
                 QHostAddress ipSender = tcpSocket->localAddress();
                 QDate date = QDate::currentDate();
-                QDateTime time = QDateTime::currentDateTimeUtc();
+                QTime time = QTime::currentTime();
                 qDebug() <<str;
-                QString toClientString = ipSender.toString()+";"+time.toString();
-                qDebug() << "Message by "+ toClientString;
-                toClientString.prepend("database;");
+                QString toClientString = "database;"+ipSender.toString()+";"+QString("%1").arg(date.day())+QString(".%1").arg(date.month())+QString(".%1").arg(date.year()) +"/"+time.toString();
+                qDebug() << "Message to client "+ toClientString;
+                //toClientString.prepend("database;");
                 sendToClients(toClientString);
+
+                sendFile = new QFile(QDir::currentPath()+"/"+DATABASE_NAME);
+                timer = new QTimer(this);
+                connect(timer, SIGNAL(timeout()), this, SLOT(timeoutToSendFile())); // Подключаем сигнал таймера к нашему слоту
+                timer->start(500);      //ставим задержку в полсекунды перед отправкой клиенту базы данных
             }
             else if(strList.value(0) == "file to analyze") //запрос на анализ файла на сервер от клиента
             {
@@ -112,6 +119,13 @@ void ServerListener::slotReadyReadTcp()
             qDebug() << "SERVER: END - bytesAvailable:" << tcpSocket->bytesAvailable();
             QFileInfo fileInfo(file);
             fileSize = fileInfo.size();
+            QHostAddress ipSender = tcpSocket->peerAddress();
+            QStringList strIP = ipSender.toString().split(":");
+            QString ips = strIP.last();         //ip адрес отправителя
+            QDate date = QDate::currentDate();
+            QTime time = QTime::currentTime();
+            QString DT = QString("%1").arg(date.day())+QString(".%1").arg(date.month())+QString(".%1").arg(date.year()) +"/"+time.toString();
+            database.inserIntoTable(DT,ips,QString::number((long)fileSize));
 
             // Очистка переменных
             tmpBlock.clear();
@@ -120,7 +134,10 @@ void ServerListener::slotReadyReadTcp()
             qDebug() << "Send to clients info about file "+flNm;
             slotFileReadyForAnalyze();
             sendToClients("fileInfo;"+flNm+";"+QString::number((long)fileSize));
-            fileCopy = QDir::tempPath()+"/"; // временная замена имени файла
+            timer = new QTimer(this);
+            connect(timer,SIGNAL(timeout()),this,SLOT(sendToClients()));
+            timer->start(100);
+            fileCopy = QDir::currentPath()+"/"; // временная замена имени файла
             filePath.clear();
         }
     }
@@ -135,8 +152,12 @@ void ServerListener::slotFileReadyForAnalyze()      //слот-функция д
 {
     Algorithm* alg1 = new ValueRepeatSymbol(filePath);
     alg1->analyzeText();
+    ValueRepeatSymbol* vl = dynamic_cast< ValueRepeatSymbol* >(alg1);
+    valueofrepeat = vl->valueOfRepeat;
     alg1 = new DistributionWordsByLength(filePath);
     alg1->analyzeText();
+    DistributionWordsByLength* dslen = dynamic_cast< DistributionWordsByLength* >(alg1);
+    distbylength = dslen->distByLengthWords;
 }
 void ServerListener::sendToClients(QString str)
 {
@@ -152,7 +173,41 @@ void ServerListener::sendToClients(QString str)
     tcpSocket->write(Data);*/
 
 }
+void ServerListener::sendToClients()
+{
+    QDataStream stream(tcpSocket);
+    stream.setVersion(QDataStream::Qt_5_12);
 
+    stream << valueofrepeat;
+    stream << distbylength;
+    tcpSocket->waitForBytesWritten();
+    disconnect(timer,SIGNAL(timeout()),this,SLOT(sendToClients()));
+}
 
+void ServerListener::sendFullFile()
+{
+    QDataStream stream(tcpSocket);
+    stream.setVersion(QDataStream::Qt_5_12);
+
+    if(sendFile->open(QFile::ReadOnly))
+    {
+        QByteArray dataS = sendFile->readAll();
+        stream << dataS;
+        tcpSocket->waitForBytesWritten();
+        qDebug() << "_SERVER: File end!";
+        sendFile->close();
+        sendFile = NULL;
+        qDebug() << "_SERVER: File send FINISH!";
+    } else {
+        qFatal("_SERVER: File not open!");
+    }
+
+}
+
+void ServerListener::timeoutToSendFile()
+{
+    sendFullFile();
+    disconnect(timer,SIGNAL(timeout()),this,SLOT(timeoutToSendFile()));
+}
 
 

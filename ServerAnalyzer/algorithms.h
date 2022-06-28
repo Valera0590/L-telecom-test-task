@@ -18,6 +18,7 @@ public:
     virtual void analyzeText() = 0;
 
 
+
 private:
     quint64 _fileSize;
     QString _filepath;

@@ -5,7 +5,7 @@ DistributionWordsByLength::DistributionWordsByLength(QString filepath):Algorithm
 DistributionWordsByLength::~DistributionWordsByLength(){}
 void DistributionWordsByLength::analyzeText()   //анализ текста из файла для распрделения слов по длинам
 {
-    DistByLengthWords.clear();
+    distByLengthWords.clear();
     //qDebug() << "DistributionWordsByLength.analyzeText was called....." << getFileSize();
     foreach (QString word, Words)
     {
@@ -19,19 +19,19 @@ void DistributionWordsByLength::analyzeText()   //анализ текста из
         if (lengthWord > 0)
         {
                 //заполняем контейнер, распределяя по кол-ву букв в слове
-            if(!DistByLengthWords.empty() && DistByLengthWords.contains(lengthWord))
+            if(!distByLengthWords.empty() && distByLengthWords.contains(lengthWord))
             {
-                int countWord = DistByLengthWords.value(lengthWord);    //кол-во слов с такой же длиной, как текущее
-                DistByLengthWords.insert(lengthWord, ++countWord);
+                int countWord = distByLengthWords.value(lengthWord);    //кол-во слов с такой же длиной, как текущее
+                distByLengthWords.insert(lengthWord, ++countWord);
             }
             else
             {
-                DistByLengthWords.insert(lengthWord,1);
+                distByLengthWords.insert(lengthWord,1);
             }
         }
     }
         //вывод в консоль
-    QMapIterator<int, int> i(DistByLengthWords);
+    QMapIterator<int, int> i(distByLengthWords);
     while (i.hasNext()) {
         i.next();
         qDebug() <<"There are "<< i.key() << " character words : " << i.value();

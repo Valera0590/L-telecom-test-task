@@ -12,9 +12,9 @@ public:
     explicit ValueRepeatSymbol(QString filepath);
     ~ValueRepeatSymbol() override;
     void analyzeText() override;    //анализ текста из файла для вычисления количества повторений каждого символа
+    QMap<QChar,int> valueOfRepeat;  //контейнер для вычисления количества повторений каждого символа
 
 private:
-    QMap<QChar,int> valueOfRepeat;  //контейнер для вычисления количества повторений каждого символа
 };
 
 #endif // VALUEREPEATSYMBOL_H

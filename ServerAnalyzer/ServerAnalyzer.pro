@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         algorithms.cpp \
+        database.cpp \
         distributionwordsbylength.cpp \
         main.cpp \
         server.cpp \
@@ -37,6 +38,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     algorithms.h \
+    database.h \
     distributionwordsbylength.h \
     server.h \
     serverlistener.h \

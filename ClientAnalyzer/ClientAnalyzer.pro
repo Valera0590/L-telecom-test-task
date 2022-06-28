@@ -1,4 +1,4 @@
-QT += quick network quickcontrols2
+QT += quick network quickcontrols2 sql widgets core
 
 CONFIG += c++11
 
@@ -15,6 +15,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         client.cpp \
+        database.cpp \
+        listmodel.cpp \
         main.cpp
 
 RESOURCES += qml.qrc
@@ -31,4 +33,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    client.h
+    client.h \
+    database.h \
+    listmodel.h

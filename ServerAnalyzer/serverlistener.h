@@ -11,6 +11,12 @@
 #include "distributionwordsbylength.h"
 #include "valuerepeatsymbol.h"
 #include "algorithms.h"
+#include "database.h"
+#include <QTime>
+#include <QTimer>
+#include <QDir>
+
+
 
 
 class ServerListener:public QTcpServer
@@ -36,9 +42,18 @@ private:
     qint64 fileSize;
     QByteArray tmpBlock;
     bool isDownloading = false;
-    //QList<QThread> threads;
+    QMap<QChar,int> valueofrepeat;
+    QMap<int,int> distbylength;
+    QTimer* timer;
+    DataBase database;
+    QFile *sendFile;
 
+private:
     void sendToClients(QString str);
+    void sendFullFile();
+private slots:
+    void sendToClients();
+    void timeoutToSendFile();
 };
 
 
