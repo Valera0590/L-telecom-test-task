@@ -7,6 +7,7 @@
 #include <QQmlContext>
 #include "database.h"
 #include "listmodel.h"
+#include "tablemodel.h"
 
 
 int main(int argc, char *argv[])
@@ -28,12 +29,15 @@ int main(int argc, char *argv[])
 
     // Объявляем и инициализируем модель данных
     ListModel* model = new ListModel();
+    TableModel* tbModelVlRep = new TableModel();
+    TableModel* tbModelDstLen = new TableModel();
     Client client;
     // Обеспечиваем доступ к модели и классу для работы с базой данных из QML
     engine.rootContext()->setContextProperty("myModel", model);
     engine.rootContext()->setContextProperty("database", &database);
     engine.rootContext()->setContextProperty("client", &client);
-
+    engine.rootContext()->setContextProperty("tabModelValRep", tbModelVlRep);
+    engine.rootContext()->setContextProperty("tabModelDstLen", tbModelDstLen);
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

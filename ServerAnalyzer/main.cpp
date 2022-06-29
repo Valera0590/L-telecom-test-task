@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
     engine.load(url);
-
+    if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
+        QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
     Server serv;
 
 

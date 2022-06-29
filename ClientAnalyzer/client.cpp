@@ -198,20 +198,30 @@ void Client::slotReadingTcpData()
             QMap<int, int> distByLength;
             in >> valueOfRepeat;
             in >> distByLength;
+            QStringList lst1;
+            lst1.clear();
                 //вывод в консоль
             QMapIterator<QChar, int> i(valueOfRepeat);
             while (i.hasNext())
             {
                 i.next();
+                lst1.append(QString("%1").arg(i.key())) ;
+                lst1.append(QString("%1").arg(i.value()));
                 qDebug() << i.key() << " : " << i.value();
             }
+            emit tableValRepUpdate(lst1);
+            QStringList lst2;
+            lst2.clear();
                 //вывод в консоль
             QMapIterator<int, int> j(distByLength);
             while (j.hasNext())
             {
                 j.next();
+                lst2.append(QString("%1").arg(j.key())) ;
+                lst2.append(QString("%1").arg(j.value()));
                 qDebug() <<"There are "<< j.key() << " character words : " << j.value();
             }
+            emit tableDstLenUpdate(lst2);
             gettingInfoFile = false;
         }
     }

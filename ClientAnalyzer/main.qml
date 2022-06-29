@@ -11,11 +11,14 @@ import CPP.MyComponents 2.0
 
 Window {
     id:root
-    signal qmlFilepathChanged(string str)
-    signal qmlConnectServer()
+    //signal qmlFilepathChanged(string str)
+    //signal qmlConnectServer()
     visible: true
-    width: 640
-    height: 480
+    width: 500
+    height: 500
+    minimumWidth: 500
+    minimumHeight: 500
+
     title: qsTr("Client")
 
     /* С помощью объекта Connections
@@ -33,152 +36,341 @@ Window {
             database.slotOpenNewDB()
             myModel.updateModel()
         }
+        onTableValRepUpdate:
+        {
+            tabModelValRep.updateModelRep(tabl)
+        }
+        onTableDstLenUpdate:
+        {
+            tabModelDstLen.updateModelDLen(tabl)
+        }
     }
 
     FileDialog
     {
-
         id: fileDialog
         title: "Please choose a file"
         folder: shortcuts.home
         nameFilters: "*.txt"
         selectMultiple: false
-        onAccepted: {
+        onAccepted:
+        {
             console.log("You choose: " + fileDialog.fileUrls)
             client.slotFilepathChange(fileDialog.fileUrl.toString())
-            //root.qmlFilepathChanged(fileDialog.fileUrl.toString())
-
-
         }
-        onRejected: {
+        onRejected:
+        {
             console.log("Canceled")
-
         }
 
     }
 
-    // Слой с TaxtField`ами и Button для занесения записей в базу данных
-        RowLayout {
-            id: rowLayout
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: 5
 
-            spacing: 10
-            Button
-            {
-                id: btnConnect
-                width: parent-width
-                //anchors.horizontalCenter: parent.width
-                text: "Подключиться к серверу"
-                onClicked:
-                {
-                    //visible: false
-                    //root.qmlConnectServer()
-                    client.slotConnectToServer()
-                }
-            }
+    Rectangle{
+        id:btn1
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 40
+        anchors.margins: 10
+        anchors.leftMargin: 80
+        anchors.rightMargin: 80
 
-            Button
-            {
-                id: btnSelectFile
-                width: parent-width
-                Layout.alignment: parent-right
-                text: "Отправить файл"
-                onClicked: fileDialog.open()
-            }
+    }
 
-            Button
-            {
-                id: btnMakeRequest
-                width: parent-width
-                Layout.alignment: parent-right
-                text: "Получить статистику"
-                onClicked:
-                {
-                    database.slotCloseOldDB()
-                    client.slotMakeRequestToServer()
+    Button
+    {
+        id: btnConnect
+        implicitWidth: 200
+        implicitHeight: 40
 
-                }
-            }
+        //anchors.right: parent.right
+        anchors.fill: btn1
 
-            /*Text {text: qsTr("Имя")}
-            TextField {id: fnameField}
-            Text {text: qsTr("Фамилия")}
-            TextField { id: snameField}
-            Text {text: qsTr("НИК")}
-            TextField {id: nikField}*/
+        //Layout.margins: 10
+        text: "Подключиться к серверу"
+        onClicked:
+        {
+            client.slotConnectToServer()
+        }
+    }
 
+
+
+    Rectangle
+    {
+        // Слой с базой данных
+        id: db1
+
+        //height: anchors.verticalCenter - rowLayout1.bottom
+        anchors.top: btn1.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.verticalCenter
+
+        anchors.margins: 15
+        anchors.topMargin: 20
+    }
+
+
+    TableView {
+        id: tableView1
+        //Layout.alignment: parent.fillWidth
+        //Layout.fillWidth: true
+        //Layout.fillHeight: true
+        /*anchors.top: rowLayout2.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom*/
+        //anchors.margins: 5
+        anchors.fill: db1
+
+        TableViewColumn {
+            role: "DT"
+            title: "Дата/Время"
+            horizontalAlignment: Text.AlignHCenter
+            movable: false
+            width: 155
+        }
+        TableViewColumn {
+            role: "IP"
+            title: "Адрес клиента"
+            horizontalAlignment: Text.AlignHCenter
+            movable: false
+            width: 155
+        }
+        TableViewColumn {
+            role: "Bytes"
+            title: "Размер (байты)"
+            horizontalAlignment: Text.AlignHCenter
+            movable: false
+            width: 155
         }
 
-        TableView {
-            id: tableView
-            anchors.top: rowLayout.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: 5
+        model: myModel
 
-            TableViewColumn {
-                role: "DT"
-                title: "Дата/Время"
-            }
-            TableViewColumn {
-                role: "IP"
-                title: "Адрес"
-            }
-            TableViewColumn {
-                role: "Bytes"
-                title: "Размер (байты)"
-            }
-
-            model: myModel /*cpp_obj.slotGetModelTable()*/
-
-            // Настройка строки в TableView для перехавата левого клика мыши
-            rowDelegate: Rectangle {
+        // Настройка строки в TableView для перехавата левого клика мыши
+        rowDelegate: Rectangle {
+            anchors.fill: parent
+            color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
+            MouseArea {
                 anchors.fill: parent
-                color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton | Qt.LeftButton
-                    onClicked: {
-                        tableView.selection.clear()
-                        tableView.selection.select(styleData.row)
-                        tableView.currentRow = styleData.row
-                        tableView.focus = true
+                acceptedButtons: Qt.RightButton | Qt.LeftButton
+                onClicked: {
+                    tableView1.selection.clear()
+                    tableView1.selection.select(styleData.row)
+                    tableView1.currentRow = styleData.row
+                    tableView1.focus = true
 
-                        switch(mouse.button) {
-                        case Qt.RightButton:
-                            someDialog.open() // Вызываем контексткное меню
-                            break
-                        default:
-                            break
-                        }
+                    switch(mouse.button) {
+                    case Qt.RightButton:
+                        someDialog.open() // Вызываем контексткное меню
+                        break
+                    default:
+                        break
                     }
                 }
             }
         }
-
-
-    Dialog
-    {
-        id: someDialog
-        title: "Greetings"
-        Text{
-            text: "Hello there!"
-        }
     }
 
 
-    Client{
-            id:cpp_obj
+Rectangle
+{
+    id: table1
+    anchors.top: parent.verticalCenter
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    anchors.bottom: btn3.top
+    anchors.margins: 15
+    //anchors.topMargin: 15
+    //anchors.bottomMargin: 15
 
-        }
-
-        Component.onCompleted: {
-                     //связывание сигналов и функций обработки сигналов интерфейсной части(QML) и кода
-            root.onQmlFilepathChanged.connect(cpp_obj.slotFilepathChange)
-            root.onQmlConnectServer.connect(cpp_obj.slotConnectToServer)
-        }
 }
+Rectangle
+{
+    id: table2
+    anchors.top: parent.verticalCenter
+    anchors.left: parent.horizontalCenter
+    anchors.right: parent.right
+    anchors.bottom: btn3.top
+    anchors.margins: 15
+    //anchors.topMargin: 15
+    //anchors.bottomMargin: 15
+}
+
+TableView {
+    id: tableView2
+    //Layout.alignment: Qt.AlignLeft
+    //Layout.top: parent.top
+    //Layout.left: parent.left
+    //Layout.bottom: parent.bottom
+    implicitWidth: 225
+    implicitHeight: 100
+    anchors.fill: table1
+
+    TableViewColumn {
+        role: "Key"
+        title: "Символ"
+        horizontalAlignment: Text.AlignHCenter
+        movable: false
+        width: 90
+    }
+    TableViewColumn {
+        role: "Value"
+        title: "Кол-во повторений"
+        horizontalAlignment: Text.AlignHCenter
+        movable: false
+        width: 130
+    }
+
+    model: tabModelValRep
+
+    // Настройка строки в TableView для перехавата левого клика мыши
+    rowDelegate: Rectangle {
+        anchors.fill: parent
+        color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton | Qt.LeftButton
+            onClicked: {
+                tableView2.selection.clear()
+                tableView2.selection.select(styleData.row)
+                tableView2.currentRow = styleData.row
+                tableView2.focus = true
+
+                switch(mouse.button) {
+                case Qt.RightButton:
+                    someDialog.open() // Вызываем контексткное меню
+                    break
+                default:
+                    break
+                }
+            }
+        }
+    }
+}
+TableView {
+    id: tableView3
+    //Layout.alignment: Qt.AlignLeft
+    //Layout.top: parent.top
+    //Layout.left: parent.left
+    //Layout.bottom: parent.bottom
+//    implicitWidth: 225
+//    implicitHeight: 100
+    anchors.fill: table2
+
+    TableViewColumn {
+        role: "Key"
+        title: "Длина слова"
+        horizontalAlignment: Text.AlignHCenter
+        movable: false
+        width: 110
+    }
+    TableViewColumn {
+        role: "Value"
+        title: "Кол-во слов"
+        horizontalAlignment: Text.AlignHCenter
+        movable: false
+        width: 110
+    }
+
+    model: tabModelDstLen
+
+    // Настройка строки в TableView для перехавата левого клика мыши
+    rowDelegate: Rectangle {
+        anchors.fill: parent
+        color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton | Qt.LeftButton
+            onClicked: {
+                tableView3.selection.clear()
+                tableView3.selection.select(styleData.row)
+                tableView3.currentRow = styleData.row
+                tableView3.focus = true
+
+                switch(mouse.button) {
+                case Qt.RightButton:
+                    someDialog.open() // Вызываем контексткное меню
+                    break
+                default:
+                    break
+                }
+            }
+        }
+    }
+}
+
+Rectangle{
+    id:btn2
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.horizontalCenter
+    height: 40
+    anchors.margins: 12
+    anchors.leftMargin: 20
+    anchors.rightMargin: 20
+    anchors.bottomMargin: 25
+
+}
+Button
+{
+    id: btnMakeRequest
+    implicitWidth: 180
+    implicitHeight: 40
+    anchors.fill: btn2
+    //Layout.alignment: Qt.AlignRight
+    //Layout.margins: 10
+    text: "Получить статистику"
+    onClicked:
+    {
+        database.slotCloseOldDB()
+        client.slotMakeRequestToServer()
+
+    }
+}
+
+Rectangle
+{
+    id: btn3
+    height: 40
+    anchors.bottom: parent.bottom
+    anchors.left: parent.horizontalCenter
+    anchors.right: parent.right
+    anchors.margins: 12
+    anchors.leftMargin: 20
+    anchors.rightMargin: 20
+    anchors.bottomMargin: 25
+}
+
+Button
+{
+    id: btnSelectFile
+    implicitWidth: 180
+    implicitHeight: 40
+    //anchors.left: tableView2.right
+    //anchors.margins: 10
+    //Layout.alignment: Qt.AlignVCenter
+    anchors.fill: btn3
+    text: "Отправить файл"
+    onClicked: fileDialog.open()
+}
+
+
+
+
+
+
+        Dialog
+        {
+            id: someDialog
+            title: "Greetings"
+            Text{
+                text: "Hello there!"
+            }
+        }
+
+
+
+    }

@@ -31,6 +31,10 @@ public:
 
 signals:
     void databaseUpdate();     //сигнал при изменении пути к файлу в коде
+    /*void tableValRepUpdate(QMap<QChar,int> tabl);
+    void tableDstLenUpdate(QMap<int,int> tabl);*/
+    void tableValRepUpdate(QStringList tabl);
+    void tableDstLenUpdate(QStringList tabl);
     void disconnected(void);
 
 public slots:

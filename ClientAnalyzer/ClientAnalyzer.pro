@@ -17,7 +17,8 @@ SOURCES += \
         client.cpp \
         database.cpp \
         listmodel.cpp \
-        main.cpp
+        main.cpp \
+        tablemodel.cpp
 
 RESOURCES += qml.qrc
 
@@ -35,4 +36,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     client.h \
     database.h \
-    listmodel.h
+    listmodel.h \
+    tablemodel.h

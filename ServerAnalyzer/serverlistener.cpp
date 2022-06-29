@@ -8,8 +8,6 @@ ServerListener::ServerListener(quint16 port)
     fileCopy = QDir::currentPath()+"/"; // временная замена имени файла
     qDebug() << fileCopy;
     startTcpServerListening(port);
-    if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
-        QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
     database.connectToDataBase();
 }
 
