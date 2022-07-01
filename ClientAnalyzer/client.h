@@ -35,6 +35,8 @@ signals:
     void tableDstLenUpdate(QMap<int,int> tabl);*/
     void tableValRepUpdate(QStringList tabl);
     void tableDstLenUpdate(QStringList tabl);
+    void connectSuccess();
+    void sentFileToServer(QString strFilename);
     void disconnected(void);
 
 public slots:

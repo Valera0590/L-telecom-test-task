@@ -129,6 +129,7 @@ void Client::slotReadingTcpData()
             if(str == "You were connecting")  //если получено сообщение о подключении клиента
             {
                 qDebug() << str;
+                emit connectSuccess();
             }
             else if(strList.value(0) == "database")   //обработчик базы данных запросов пользователя
             {
@@ -247,6 +248,7 @@ void Client::sendFullFile()
         sendFile->close();
         sendFile = NULL;
         qDebug() << "_CLIENT: File send FINISH!";
+        emit sentFileToServer(filePath.split("/").last());
     } else {
         qFatal("_CLIENT: File not open!");
     }

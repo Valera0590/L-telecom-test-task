@@ -11,6 +11,8 @@ class TableModel: public QAbstractTableModel
     enum Roles {
         Key = Qt::UserRole + 1,      // уникальный ключ (символ или число)
         Value                     // значение
+        /*TableData = Qt::UserRole + 1,      // уникальный ключ (символ или число)
+        TableHeader                     // значение*/
     };
 public:
     explicit TableModel(QObject *parent = nullptr);
