@@ -1,12 +1,13 @@
-QT += quick network sql
-QT += quickcontrols2
+QT -= gui
+QT += network sql
 
-CONFIG += c++11
+CONFIG += c++11 console
+CONFIG -= app_bundle
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
-# depend on your compiler). Refer to the documentation for the
-# deprecated API to know how to port your code away from it.
+# depend on your compiler). Please consult the documentation of the
+# deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
 # You can also make your code fail to compile if it uses deprecated APIs.
@@ -22,14 +23,6 @@ SOURCES += \
         server.cpp \
         serverlistener.cpp \
         valuerepeatsymbol.cpp
-
-RESOURCES += qml.qrc
-
-# Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
-
-# Additional import path used to resolve QML modules just for Qt Quick Designer
-QML_DESIGNER_IMPORT_PATH =
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

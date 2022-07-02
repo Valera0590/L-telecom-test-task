@@ -1,14 +1,9 @@
 #include "client.h"
 
-//Client::Client(QQmlApplicationEngine& db){}
-
 Client::Client()
 {
     udpSocket = new QUdpSocket(this);   //coздаëм обьект соkета QUdpSocket
     connect (udpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingUDPData()));  //для получения и отображения данныx соединяем сигнал сокета со слотом
-    //связывание сигнала о новом файле со слотом анализа файла
-    //connect(this, SIGNAL(filepathChanged()), this, SLOT(slotFileReadyForAnalyze()));
-
 }
 
 Client::~Client()
@@ -21,9 +16,12 @@ void Client::slotConnectToServer()
 {
     if(!clientConnected)
     {
-
         qDebug() << "Try to connect with server by UDP.";
+        connect(udpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
         clientConnected = true;
+        timerConnectUDP = new QTimer(this);
+        connect(timerConnectUDP, SIGNAL(timeout()), this, SLOT(slotTimeoutToConnectUDP())); // Подключаем сигнал таймера к нашему слоту
+        timerConnectUDP->start(3000);      //если через 3 секунд не будет произведено подключение к серверу, то выдаем ошибку
         udpSocket->writeDatagram(QString("User want connect from out").toUtf8(), QHostAddress::Broadcast, 2222);  //отправляем данные по широковешательному адресу на порт 2222
         portThisClient += udpSocket->localPort();
         udpSocket->abort();
@@ -44,6 +42,7 @@ void Client:: slotReadingUDPData()  //чтение данных
 {
     QHostAddress sender;    //agpec
     quint16 senderPort; //nopт отправителя
+    disconnect(timerConnectUDP, SIGNAL(timeout()), this, SLOT(slotTimeoutToConnectUDP()));
     while(udpSocket->hasPendingDatagrams())
     {
         datagram.resize(udpSocket->pendingDatagramSize());  //узнаем размер ждущей обработки "датаграммы"
@@ -62,6 +61,7 @@ void Client:: slotReadingUDPData()  //чтение данных
         return;
     }
     disconnect(udpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingUDPData()));
+    disconnect(udpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
     udpSocket->close();
 }
 
@@ -84,20 +84,18 @@ void Client::slotFilepathChange(QString str)    //слот-функция при
         QString infoAboutFileToServer="file to analyze;"+filePath;
         stream << infoAboutFileToServer;
         tcpSocket->waitForBytesWritten();
-        //QThread::msleep(200);
         sendFile = new QFile(filePath);
         timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(timeoutToSendFile())); // Подключаем сигнал таймера к нашему слоту
+        connect(timer, SIGNAL(timeout()), this, SLOT(slotTimeoutToSendFile())); // Подключаем сигнал таймера к нашему слоту
         timer->start(500);      //ставим задержку в полсекунды перед отправкой серверу файла
     }
     else
     {
         qDebug() << "Не был выбран файл для отправки!";
-        //QMessageBox::critical(NULL,QObject::tr("Ошибка"),tr("Не был выбран файл для отправки!"));
     }
 }
 
-void Client::slotMakeRequestToServer()
+void Client::slotMakeRequestToServer()  //слот-функция для запроса статистики от сервера
 {
     qDebug() << "Send to server request";
     QDataStream stream(tcpSocket);
@@ -108,13 +106,7 @@ void Client::slotMakeRequestToServer()
     tcpSocket->waitForBytesWritten();
 }
 
-/*ListModel Client::slotGetModelTable()
-{
-
-    return mymodel;
-}*/
-
-void Client::slotReadingTcpData()
+void Client::slotReadingTcpData()   //слот-функция для получения данных по TCP сокету
 {
     qDebug() << "reading tcpSocket.";
     QDataStream in(tcpSocket);
@@ -128,32 +120,18 @@ void Client::slotReadingTcpData()
             QStringList strList = str.split(";");
             if(str == "You were connecting")  //если получено сообщение о подключении клиента
             {
-                qDebug() << str;
                 emit connectSuccess();
             }
-            else if(strList.value(0) == "database")   //обработчик базы данных запросов пользователя
+            else if(strList.value(0) == "database")   //если пришло сообщение о получении БД
             {
                 gettingInfoDB = true;
-                //strList.removeFirst();
-                while(!strList.isEmpty())
-                {
-                    qDebug() << strList.value(0) << " | " << strList.value(1) << " | " << strList.value(2);
-                    for(int i=0;i<3;++i)    strList.removeFirst();
-                }
-                /*if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
-                {
-                    QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
-                    qDebug() << "File had removed!";
-                    //database.closeDataBase();
-                }*/
-                //emit databaseUpdate();
+                qDebug() << "Start getting database";
             }
-            else if(strList.value(0) == "fileInfo") //обработчик загруженного на сервер файла
+            else if(strList.value(0) == "fileInfo") //если пришло сообщение о получении анализа загруженного на сервер файла
             {
                 gettingInfoFile = true;
                 qDebug() << "Get info about analyzing file...";
                 qDebug() << str;
-
             }
         }
         else if(gettingInfoDB)  //получение базы данных
@@ -162,14 +140,15 @@ void Client::slotReadingTcpData()
             in >> tmpBlock;
             if (!in.commitTransaction())    //ждём полной передачи файла через сокет
                 return;
+                //обновляем файл(удаляем + создаем новый)
             if(QFile(QDir::currentPath()+"/" DATABASE_NAME).exists())
             {
                 QFile(QDir::currentPath()+"/" DATABASE_NAME).remove();
                 qDebug() << "File had removed!";
-                //database.closeDataBase();
+
             }
             QFile file(QDir::currentPath()+"/" DATABASE_NAME);
-
+                //запись в файл БД
             if(file.open(QIODevice::WriteOnly))
             {
                 file.write(tmpBlock);
@@ -181,49 +160,43 @@ void Client::slotReadingTcpData()
                 return;
             }
             file.close();
-            qDebug() << "SERVER: END - bytesAvailable:" << tcpSocket->bytesAvailable();
+            qDebug() << "Client: END - bytesAvailable:" << tcpSocket->bytesAvailable();
             // Очистка переменных
             tmpBlock.clear();
+            emit databaseUpdate();  //вызов обновления модели таблиц
             gettingInfoDB = false;
-            emit databaseUpdate();
-            qDebug() << "Signal databaseUpdate!";
-            // Подключаемся к базе данных
-            //database.connectToDataBase();
-
-            // инициализируем модель данных
-            //mymodel = new ListModel();
+            emit gotInfoFromServer("Статистика запросов на сервер получена!");   //вызов сигнала об освобождении сокета
         }
-        else if(gettingInfoFile)
+        else if(gettingInfoFile)    //получение анализа от сервера загруженного файла
         {
             QMap<QChar, int> valueOfRepeat;
             QMap<int, int> distByLength;
             in >> valueOfRepeat;
             in >> distByLength;
-            QStringList lst1;
-            lst1.clear();
-                //вывод в консоль
+            QStringList listRepeatCharacters;
+            listRepeatCharacters.clear();
+                //подготовка списка для отображения в первой таблице
             QMapIterator<QChar, int> i(valueOfRepeat);
             while (i.hasNext())
             {
                 i.next();
-                lst1.append(QString("%1").arg(i.key())) ;
-                lst1.append(QString("%1").arg(i.value()));
-                qDebug() << i.key() << " : " << i.value();
+                listRepeatCharacters.append(QString("%1").arg(i.key())) ;
+                listRepeatCharacters.append(QString("%1").arg(i.value()));
             }
-            emit tableValRepUpdate(lst1);
-            QStringList lst2;
-            lst2.clear();
-                //вывод в консоль
+            emit tableModelValueRepeatUpdate(listRepeatCharacters);
+            QStringList listWordsByLength;
+            listWordsByLength.clear();
+                //подготовка списка для отображения во второй таблице
             QMapIterator<int, int> j(distByLength);
             while (j.hasNext())
             {
                 j.next();
-                lst2.append(QString("%1").arg(j.key())) ;
-                lst2.append(QString("%1").arg(j.value()));
-                qDebug() <<"There are "<< j.key() << " character words : " << j.value();
+                listWordsByLength.append(QString("%1").arg(j.key())) ;
+                listWordsByLength.append(QString("%1").arg(j.value()));
             }
-            emit tableDstLenUpdate(lst2);
+            emit tableModelWordsByLengthUpdate(listWordsByLength);
             gettingInfoFile = false;
+            emit gotInfoFromServer("Сервер закончил анализ отправленного файла!");   //вызов сигнала об освобождении сокета
         }
     }
     else
@@ -234,7 +207,7 @@ void Client::slotReadingTcpData()
 
 }
 
-void Client::sendFullFile()
+void Client::sendFullFile()     //метод, реализующий отправку файла серверу для анализа
 {
     QDataStream stream(tcpSocket);
     stream.setVersion(QDataStream::Qt_5_12);
@@ -255,32 +228,54 @@ void Client::sendFullFile()
 
 }
 
-void Client::timeoutToSendFile()
+void Client::slotTimeoutToSendFile()    //обработчик по окончании времени таймера
 {
     sendFullFile();
-    disconnect(timer,SIGNAL(timeout()),this,SLOT(timeoutToSendFile()));
+    disconnect(timer,SIGNAL(timeout()),this,SLOT(slotTimeoutToSendFile()));
 }
 
-void Client::slotSockDisc()
+void Client::slotTimeoutToConnectUDP()
+{
+    disconnect(timerConnectUDP, SIGNAL(timeout()), this, SLOT(slotTimeoutToConnectUDP()));
+    udpSocket->abort();
+    disconnect (udpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingUDPData()));
+    delete udpSocket;
+    portThisClient = 1;
+    disconnect (tcpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingTcpData()));
+    disconnect (tcpSocket, SIGNAL (disconnected()), this, SLOT (slotSockDisc()));
+    disconnect(tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+    delete tcpSocket;
+    clientConnected = false;
+
+    udpSocket = new QUdpSocket(this);   //coздаëм обьект соkета QUdpSocket
+    connect (udpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingUDPData()));  //для получения и отображения данныx соединяем сигнал сокета со слотом
+    emit errorSocket("Возникла ошибка при попытке подключения к серверу.\nПожалуйста проверьте, запущен ли сервер.");
+}
+
+void Client::slotSockDisc()     //слот-функция для удаления сокета при закрытии приложения
 {
     qDebug() << "Deleting tcpSocket...";
     tcpSocket->deleteLater();
 }
 
 
-void Client::displayError(QAbstractSocket::SocketError socketError) {
+void Client::displayError(QAbstractSocket::SocketError socketError) //метод для отображения ошибки сокета в случае возникновения таковой
+{
     switch (socketError) {
         case QAbstractSocket::RemoteHostClosedError:
             break;
         case QAbstractSocket::HostNotFoundError:
+            emit errorSocket("The host was not found. Please\ncheck the host name and port settings.");
             qDebug() << "The host was not found. Please check the host name and port settings.";
             break;
         case QAbstractSocket::ConnectionRefusedError:
+            emit errorSocket("The connection was refused by the peer.\nMake sure the fortune server is running,\nand check that the host name and port settings are correct.");
             qDebug() << "The connection was refused by the peer.";
             qDebug() << "Make sure the fortune server is running, ";
             qDebug() << "and check that the host name and port settings are correct.";
             break;
         default:
+        emit errorSocket("The following error occurred:\n" + QString("%1.").arg(tcpSocket->errorString()));
             qDebug() << "The following error occurred: " + QString("%1.").arg(tcpSocket->errorString());
     }
     exit(socketError + 1);

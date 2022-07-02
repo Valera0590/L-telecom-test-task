@@ -11,8 +11,6 @@ class TableModel: public QAbstractTableModel
     enum Roles {
         Key = Qt::UserRole + 1,      // уникальный ключ (символ или число)
         Value                     // значение
-        /*TableData = Qt::UserRole + 1,      // уникальный ключ (символ или число)
-        TableHeader                     // значение*/
     };
 public:
     explicit TableModel(QObject *parent = nullptr);
@@ -23,10 +21,8 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
 public slots:
-    /*void updateModelRep(QMap<QChar,int> tb);
-    void updateModelDLen(QMap<int,int> tb);*/
-    void updateModelRep(QStringList tb);
-    void updateModelDLen(QStringList tb);
+    void updateModelValueRepeat(QStringList tb);
+    void updateModelWordsByLength(QStringList tb);
 
 private:
 

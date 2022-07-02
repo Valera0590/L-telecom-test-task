@@ -20,94 +20,74 @@ Window {
     minimumHeight: 580
 
     title: qsTr("Client")
-    /*property string button_edit_enable_state: "enabled"
 
-    state: button_edit_enable_state
-
-        states: [
-            State {
-                name: "enabled"
-                PropertyChanges { target: btnConnect; enabled: true }
-            },
-            State {
-                name: "disabled"
-                PropertyChanges { target: btnConnect; enabled: false }
-            }
-        ]*/
 
     /* С помощью объекта Connections
          * Устанавливаем соединение с классом ядра приложения
          * */
     Connections {
         target: client // Указываем целевое соединение
-        /* Объявляем и реализуем функцию, как параметр
-         * объекта и с имененем похожим на название сигнала
-         * Разница в том, что добавляем в начале on и далее пишем
-         * с заглавной буквы
-         * */
-        onDatabaseUpdate:
+        onDatabaseUpdate:   //при обновлении БД
         {
             database.slotOpenNewDB()
             myModel.updateModel()
         }
-        onTableValRepUpdate:
+        onTableModelValueRepeatUpdate:  //при обновлении данных в таблице 1
         {
-            tabModelValRep.updateModelRep(tabl)
+            tabModelValRep.updateModelValueRepeat(table)
         }
-        onTableDstLenUpdate:
+        onTableModelWordsByLengthUpdate:    //при обновлении данных в таблице 2
         {
-            tabModelDstLen.updateModelDLen(tabl)
+            tabModelDstLen.updateModelWordsByLength(table)
         }
-        onConnectSuccess:
+        onConnectSuccess:           //при успешном подключении
         {
             text_connection.text = "<i>Подключено</i>"
+            btnMakeRequest.enabled = true
+            btnSelectFile.enabled = true
         }
-        onSentFileToServer:
+        onSentFileToServer:         //при успешной отправке клиентом файла на сервер
         {
-            text_sent_file.text = "Файл "+strFilename+" был отправлен"
+            text_sent_file.text = "<i>Файл "+strFilename+" был отправлен</i>"
+        }
+        onGotInfoFromServer:        //после получения новой информации от сервера и освобождении сокета
+        {
+            btnMakeRequest.enabled = true
+            btnSelectFile.enabled = true
+            someDialog.title = "Информация"
+            text_someDialog.text = strInfo
+            someDialog.open()
+        }
+        onErrorSocket:              //при ошибке подключения к серверу
+        {
+            someDialog.title = "Ошибка"
+            text_someDialog.text = strErrorSocket
+            someDialog.open()
+            btnConnect.enabled = true
         }
     }
 
-    FileDialog
+    function disableButton1 ()
     {
-        id: fileDialog
-        title: "Please choose a file"
-        folder: shortcuts.home
-        nameFilters: "*.txt"
-        selectMultiple: false
-        onAccepted:
-        {
-            console.log("You choose: " + fileDialog.fileUrls)
-            client.slotFilepathChange(fileDialog.fileUrl.toString())
-        }
-        onRejected:
-        {
-            console.log("Canceled")
-        }
-
+        //btn1.enabled = false;
+        btnConnect.enabled = false
     }
 
     Rectangle
     {
         id:status_connection
-        //anchors.left: parent.left
-        //anchors.left: parent.horizontalCenter
         anchors.right: parent.right
         anchors.top: parent.top
         width: 150
         height: 40
         anchors.margins: 15
         anchors.rightMargin: 40
-//        border.color: "#000"
-//        border.width: 3
 
 
         Text {
             id: text_connection
             text: "<i>Не подключено</i>"
             anchors.centerIn: parent
-            //horizontalAlignment: Text.AlignRight
-            //verticalAlignment: Text.AlignVCenter
         }
     }
 
@@ -128,17 +108,15 @@ Window {
         id: btnConnect
         implicitWidth: 200
         implicitHeight: 40
-
-        //anchors.right: parent.right
         anchors.fill: btn1
-
-        //Layout.margins: 10
         text: "Подключиться к серверу"
-        //enabled: true
         onClicked:
         {
             client.slotConnectToServer()
             //button_edit_enable_state = "disabled"
+            btnConnect.enabled = false
+            //btn1.enabled = false
+            //disableButton1()
         }
 
     }
@@ -159,31 +137,19 @@ Window {
 
     Rectangle
     {
-        // Слой с базой данных
         id: db1
-
-        //height: anchors.verticalCenter - rowLayout1.bottom
         anchors.top: block_database.top
         anchors.left: block_database.left
         anchors.right: block_database.right
         anchors.bottom: btn2.top
 
         anchors.margins: 10
-//        anchors.topMargin: 10
         anchors.bottomMargin: 15
     }
 
 
     TableView {
         id: tableView1
-        //Layout.alignment: parent.fillWidth
-        //Layout.fillWidth: true
-        //Layout.fillHeight: true
-        /*anchors.top: rowLayout2.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom*/
-        //anchors.margins: 5
         anchors.fill: db1
 
         TableViewColumn {
@@ -210,26 +176,20 @@ Window {
 
         model: myModel
 
-        // Настройка строки в TableView для перехавата левого клика мыши
+        // Настройка строки в TableView для перехавата клика мыши
         rowDelegate: Rectangle {
             anchors.fill: parent
             color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
-                onClicked: {
+                onClicked:
+                {
                     tableView1.selection.clear()
                     tableView1.selection.select(styleData.row)
                     tableView1.currentRow = styleData.row
                     tableView1.focus = true
 
-                    switch(mouse.button) {
-                    case Qt.RightButton:
-                        someDialog.open() // Вызываем контексткное меню
-                        break
-                    default:
-                        break
-                    }
                 }
             }
         }
@@ -253,14 +213,14 @@ Window {
         implicitWidth: 180
         implicitHeight: 40
         anchors.fill: btn2
-        //Layout.alignment: Qt.AlignRight
-        //Layout.margins: 10
+        enabled: false
         text: "Получить статистику"
         onClicked:
         {
             database.slotCloseOldDB()
             client.slotMakeRequestToServer()
-
+            btnMakeRequest.enabled = false
+            btnSelectFile.enabled = false
         }
     }
 
@@ -283,14 +243,8 @@ Window {
         anchors.top: block_analyze_file.top
         anchors.left: block_analyze_file.left
         anchors.right: block_analyze_file.horizontalCenter
-        //anchors.bottom: block_analyze_file.bottom
         anchors.margins: 10
-//        anchors.top: btn2.bottom
-//        anchors.left: parent.left
-//        anchors.right: parent.horizontalCenter
         anchors.bottom: sent_file.top
-//        anchors.margins: 15
-//        anchors.topMargin: 10
         anchors.bottomMargin: 15
 
     }
@@ -300,23 +254,13 @@ Window {
         anchors.top: block_analyze_file.top
         anchors.left: block_analyze_file.horizontalCenter
         anchors.right: block_analyze_file.right
-//        anchors.bottom: block_analyze_file.bottom
         anchors.margins: 10
-//        anchors.top: btn2.bottom
-//        anchors.left: parent.horizontalCenter
-//        anchors.right: parent.right
         anchors.bottom: btn3.top
-//        anchors.margins: 15
-//        anchors.topMargin: 10
         anchors.bottomMargin: 15
     }
 
     TableView {
         id: tableView2
-        //Layout.alignment: Qt.AlignLeft
-        //Layout.top: parent.top
-        //Layout.left: parent.left
-        //Layout.bottom: parent.bottom
         implicitWidth: 225
         implicitHeight: 100
         anchors.fill: table1
@@ -338,44 +282,25 @@ Window {
 
         model: tabModelValRep
 
-        // Настройка строки в TableView для перехавата левого клика мыши
+        // Настройка строки в TableView для перехавата клика мыши
         rowDelegate: Rectangle {
             anchors.fill: parent
             color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
-            /*Text {
-            id: tabledata
-
-            font.pointSize: 12
-            anchors.centerIn: parent
-        }*/
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
-                onClicked: {
+                onClicked:
+                {
                     tableView2.selection.clear()
                     tableView2.selection.select(styleData.row)
                     tableView2.currentRow = styleData.row
                     tableView2.focus = true
-
-                    switch(mouse.button) {
-                    case Qt.RightButton:
-                        someDialog.open() // Вызываем контексткное меню
-                        break
-                    default:
-                        break
-                    }
                 }
             }
         }
     }
     TableView {
         id: tableView3
-        //Layout.alignment: Qt.AlignLeft
-        //Layout.top: parent.top
-        //Layout.left: parent.left
-        //Layout.bottom: parent.bottom
-        //    implicitWidth: 225
-        //    implicitHeight: 100
         anchors.fill: table2
 
         TableViewColumn {
@@ -395,26 +320,19 @@ Window {
 
         model: tabModelDstLen
 
-        // Настройка строки в TableView для перехавата левого клика мыши
+        // Настройка строки в TableView для перехавата клика мыши
         rowDelegate: Rectangle {
             anchors.fill: parent
             color: styleData.selected ? 'skyblue' : (styleData.alternate ? 'whitesmoke' : 'white');
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
-                onClicked: {
+                onClicked:
+                {
                     tableView3.selection.clear()
                     tableView3.selection.select(styleData.row)
                     tableView3.currentRow = styleData.row
                     tableView3.focus = true
-
-                    switch(mouse.button) {
-                    case Qt.RightButton:
-                        someDialog.open() // Вызываем контексткное меню
-                        break
-                    default:
-                        break
-                    }
                 }
             }
         }
@@ -439,12 +357,15 @@ Window {
         id: btnSelectFile
         implicitWidth: 180
         implicitHeight: 40
-        //anchors.left: tableView2.right
-        //anchors.margins: 10
-        //Layout.alignment: Qt.AlignVCenter
         anchors.fill: btn3
+        enabled: false
         text: "Отправить файл"
-        onClicked: fileDialog.open()
+        onClicked:
+        {
+            fileDialog.open()
+            btnMakeRequest.enabled = false
+            btnSelectFile.enabled = false
+        }
     }
 
     Rectangle
@@ -454,7 +375,6 @@ Window {
         implicitWidth: root.width/3.5
         anchors.left: block_analyze_file.left
         anchors.bottom: block_analyze_file.bottom
-        //anchors.leftMargin: 150
         anchors.leftMargin: 30
         anchors.bottomMargin: 15
 
@@ -463,7 +383,6 @@ Window {
             id: text_sent_file
             clip: true
             anchors.fill: parent
-            //anchors.centerIn: sent_file
             text: "<i>Файл не выбран</i>"
             elide: Text.ElideRight
             wrapMode: Text.WordWrap
@@ -473,6 +392,28 @@ Window {
     }
 
 
+    FileDialog
+    {
+        id: fileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        nameFilters: "*.txt"
+        selectMultiple: false
+        onAccepted:
+        {
+            console.log("You choose: " + fileDialog.fileUrls)
+            client.slotFilepathChange(fileDialog.fileUrl.toString())
+
+        }
+        onRejected:
+        {
+            console.log("Canceled")
+            btnMakeRequest.enabled = true
+            btnSelectFile.enabled = true
+        }
+
+    }
+
 
 
     Dialog
@@ -480,6 +421,7 @@ Window {
         id: someDialog
         title: "Greetings"
         Text{
+            id: text_someDialog
             text: "Hello there!"
         }
     }

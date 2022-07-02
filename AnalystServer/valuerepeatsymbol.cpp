@@ -1,13 +1,10 @@
 #include "valuerepeatsymbol.h"
 
-//ValueRepeatSymbol::ValueRepeatSymbol():Algorithm(){}
 ValueRepeatSymbol::ValueRepeatSymbol(QString filepath):Algorithm(filepath){}
 ValueRepeatSymbol::~ValueRepeatSymbol(){}
 void ValueRepeatSymbol::analyzeText()       //анализ текста из файла для вычисления количества повторений каждого символа
 {
     valueOfRepeat.clear();
-    //qDebug() << "ValueRepeatSymbol.analyzeText was called....." << getFileSize();
-
     foreach (QString word, Words)      //разбор каждого слова на символы и заполнение контейнера с кол-вом символов
     {
         while(!word.isEmpty())

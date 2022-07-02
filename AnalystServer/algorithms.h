@@ -22,7 +22,8 @@ public:
 private:
     quint64 _fileSize;
     QString _filepath;
-    void decomposeFile();   //алгоритм разбиения текста из файла на слова
+    void decomposeFileByWords();   //метод разбиения текста из файла на слова
+    QString fileFix(QString oneStringOfFile);   //метод исправления строки файла для дальнейшего разбиения
 };
 
 

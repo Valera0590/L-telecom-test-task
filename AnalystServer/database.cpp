@@ -43,7 +43,6 @@ bool DataBase::openDataBase()
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName(DATABASE_HOSTNAME);
     db.setDatabaseName(QDir::currentPath()+"/" DATABASE_NAME);
-    qDebug() << QDir::currentPath()+"/" DATABASE_NAME;
     if(db.open())
     {
         return true;
@@ -110,7 +109,7 @@ bool DataBase::inserIntoTable(const QVariantList &data)
     // После чего выполняется запросом методом exec()
     if(!query.exec())
     {
-        qDebug() << "error insert into " << TABLE << query.lastError().text();
+        qDebug() << "Error insert into " << TABLE << query.lastError().text();
         return false;
     } else
     {
@@ -119,7 +118,7 @@ bool DataBase::inserIntoTable(const QVariantList &data)
     return false;
 }
 
-/* Второй метод для вставки записи в базу данных
+/* Метод для вставки записи в базу данных
  * */
 bool DataBase::inserIntoTable(const QString &dateTime, const QString &ip, const QString &bytes)
 {
@@ -150,7 +149,7 @@ bool DataBase::removeRecord(const int id)
     // Выполняем удаление
     if(!query.exec())
     {
-        qDebug() << "error delete row " << TABLE;
+        qDebug() << "Error delete row " << TABLE;
         qDebug() << query.lastError().text();
         return false;
     } else

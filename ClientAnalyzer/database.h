@@ -13,15 +13,14 @@
 #include <QDir>
 
 /* Директивы имен таблицы, полей таблицы и базы данных */
-#define DATABASE_HOSTNAME   "StaticticRequestsDataBase"
-#define DATABASE_NAME       "StaticticRequests.db"
+#define DATABASE_HOSTNAME   "StatisticRequestsDataBase"
+#define DATABASE_NAME       "StatisticRequests.db"
 
-#define TABLE                   "StaticticRequestsToAnalyze"         // Название таблицы
+#define TABLE                   "StatisticRequestsToAnalyze"         // Название таблицы
 #define TABLE_DATETIME          "DateTime"         // Вторая колонка
 #define TABLE_IP                "IPAdress"         // Третья колонка
 #define TABLE_SIZEFILE          "Sizebytes"        // Четвертая колонка
 
-// Первая колонка содержит Autoincrement ID
 
 class DataBase : public QObject
 {

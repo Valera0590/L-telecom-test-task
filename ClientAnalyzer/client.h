@@ -10,34 +10,30 @@
 #include <QThread>
 #include <QTime>
 #include <QTimer>
-//#include <QQmlProperty>
-//#include <QQmlContext>
 #include "database.h"
-//#include "listmodel.h"
+
 
 
 
 class Client: public QObject
 {
     Q_OBJECT
-        //свойство связывающее события интерфейса QML и кода
-    //Q_PROPERTY(QString filepath READ getFilepath WRITE setFilepath NOTIFY filepathChanged)
+
 public:
     Client();
-    //Client(QQmlApplicationEngine &engine);
     ~Client();
     QUdpSocket *udpSocket;  //указатель на объект класса QUdpSocket
     QTcpSocket *tcpSocket;  //указатель на объект класса QTcpSocket
 
 signals:
     void databaseUpdate();     //сигнал при изменении пути к файлу в коде
-    /*void tableValRepUpdate(QMap<QChar,int> tabl);
-    void tableDstLenUpdate(QMap<int,int> tabl);*/
-    void tableValRepUpdate(QStringList tabl);
-    void tableDstLenUpdate(QStringList tabl);
+    void tableModelValueRepeatUpdate(QStringList table);
+    void tableModelWordsByLengthUpdate(QStringList table);
     void connectSuccess();
     void sentFileToServer(QString strFilename);
     void disconnected(void);
+    void errorSocket(QString strErrorSocket);
+    void gotInfoFromServer(QString strInfo);
 
 public slots:
     void slotConnectToServer();
@@ -46,12 +42,12 @@ public slots:
     void slotSockDisc();    //отключение сокета
     void slotFilepathChange(QString str);
     void slotMakeRequestToServer(); //запрос статистики от сервера
-    //ListModel slotGetModelTable();
 
 private slots:
     void displayError(QAbstractSocket::SocketError socketError);
     void sendFullFile();
-    void timeoutToSendFile();
+    void slotTimeoutToSendFile();
+    void slotTimeoutToConnectUDP();
 
 private:
     QByteArray datagram;
@@ -66,8 +62,7 @@ private:
     bool gettingInfoFile = false;
     bool gettingInfoDB = false;
     QByteArray tmpBlock;
-    //DataBase database;
-    //ListModel* mymodel;
+    QTimer* timerConnectUDP;
 };
 
 #endif // CLIENT_H

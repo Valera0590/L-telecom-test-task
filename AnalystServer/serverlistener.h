@@ -49,11 +49,11 @@ private:
     QFile *sendFile;
 
 private:
-    void sendToClients(QString str);
-    void sendFullFile();
+    void sendToClient(QString str);
+    void sendDatabase();
 private slots:
-    void sendToClients();
-    void timeoutToSendFile();
+    void sendToClient();
+    void timeoutToSendDatabase();
 };
 
 
