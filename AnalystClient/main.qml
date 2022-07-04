@@ -1,7 +1,3 @@
-/*import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.1*/
 import QtQuick 2.5
 import QtQuick.Window 2.12
 import QtQuick.Controls 1.4
@@ -11,8 +7,6 @@ import CPP.MyComponents 2.0
 
 Window {
     id:root
-    //signal qmlFilepathChanged(string str)
-    //signal qmlConnectServer()
     visible: true
     width: 570
     height: 580
@@ -27,30 +21,30 @@ Window {
          * */
     Connections {
         target: client // Указываем целевое соединение
-        onDatabaseUpdate:   //при обновлении БД
+        function onDatabaseUpdate()   //при обновлении БД
         {
             database.slotOpenNewDB()
             myModel.updateModel()
         }
-        onTableModelValueRepeatUpdate:  //при обновлении данных в таблице 1
+        function onTableModelValueRepeatUpdate(table)  //при обновлении данных в таблице 1
         {
             tabModelValRep.updateModelValueRepeat(table)
         }
-        onTableModelWordsByLengthUpdate:    //при обновлении данных в таблице 2
+        function onTableModelWordsByLengthUpdate(table)    //при обновлении данных в таблице 2
         {
             tabModelDstLen.updateModelWordsByLength(table)
         }
-        onConnectSuccess:           //при успешном подключении
+        function onConnectSuccess()           //при успешном подключении
         {
             text_connection.text = "<i>Подключено</i>"
             btnMakeRequest.enabled = true
             btnSelectFile.enabled = true
         }
-        onSentFileToServer:         //при успешной отправке клиентом файла на сервер
+        function onSentFileToServer(strFilename)         //при успешной отправке клиентом файла на сервер
         {
             text_sent_file.text = "<i>Файл "+strFilename+" был отправлен</i>"
         }
-        onGotInfoFromServer:        //после получения новой информации от сервера и освобождении сокета
+        function onGotInfoFromServer(strInfo)        //после получения новой информации от сервера и освобождении сокета
         {
             btnMakeRequest.enabled = true
             btnSelectFile.enabled = true
@@ -58,7 +52,7 @@ Window {
             text_someDialog.text = strInfo
             someDialog.open()
         }
-        onErrorSocket:              //при ошибке подключения к серверу
+        function onErrorSocket(strErrorSocket)              //при ошибке подключения к серверу
         {
             someDialog.title = "Ошибка"
             text_someDialog.text = strErrorSocket
@@ -67,11 +61,6 @@ Window {
         }
     }
 
-    function disableButton1 ()
-    {
-        //btn1.enabled = false;
-        btnConnect.enabled = false
-    }
 
     Rectangle
     {

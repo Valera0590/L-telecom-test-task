@@ -1,5 +1,6 @@
 #ifndef VALUEREPEATSYMBOL_H
 #define VALUEREPEATSYMBOL_H
+
 #include "algorithms.h"
 
 

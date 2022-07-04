@@ -1,5 +1,6 @@
 #ifndef TABLEMODEL_H
 #define TABLEMODEL_H
+
 #include <QObject>
 #include <QAbstractTableModel>
 #include <QDebug>

@@ -1,5 +1,6 @@
 #ifndef DISTRIBUTIONWORDSBYLENGTH_H
 #define DISTRIBUTIONWORDSBYLENGTH_H
+
 #include "algorithms.h"
 
 

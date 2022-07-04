@@ -103,3 +103,4 @@ quint64 Algorithm::getFileSize()
 
 
 
+

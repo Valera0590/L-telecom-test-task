@@ -53,4 +53,5 @@ public slots:
     bool removeRecord(const int id); // Удаление записи из таблицы по её id
 
 };
+
 #endif // DATABASE_H

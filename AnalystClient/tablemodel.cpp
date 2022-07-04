@@ -3,8 +3,6 @@
 TableModel::TableModel(QObject *parent):QAbstractTableModel(parent)
 {
     _modelData.clear();
-    //_modelData.append({"Пусто1", "Пусто2"});
-    //qDebug() << "Constructor(empty)";
 }
 
 int TableModel::rowCount(const QModelIndex &) const

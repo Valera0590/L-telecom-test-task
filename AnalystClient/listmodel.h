@@ -1,6 +1,7 @@
 #ifndef LISTMODEL_H
 #define LISTMODEL_H
 
+
 #include <QObject>
 #include <QSqlQueryModel>
 
@@ -38,4 +39,5 @@ public slots:
     void updateModel();
     int getId(int row);
 };
+
 #endif // LISTMODEL_H

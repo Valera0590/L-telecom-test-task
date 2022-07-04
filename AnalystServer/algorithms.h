@@ -1,5 +1,5 @@
-#ifndef ALGORITHMS_H
-#define ALGORITHMS_H
+#ifndef ALGORITHM_H
+#define ALGORITHM_H
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
@@ -25,7 +25,4 @@ private:
     void decomposeFileByWords();   //метод разбиения текста из файла на слова
     QString fileFix(QString oneStringOfFile);   //метод исправления строки файла для дальнейшего разбиения
 };
-
-
-
-#endif // ALGORITHMS_H
+#endif // ALGORITHM_H

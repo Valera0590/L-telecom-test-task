@@ -1,5 +1,6 @@
 #ifndef SERVER_H
 #define SERVER_H
+
 #include "serverlistener.h"
 #include <QObject>
 
@@ -23,7 +24,5 @@ private:
     QString message = "";
     QList<ServerListener*> listeners;
 };
-
-
 
 #endif // SERVER_H

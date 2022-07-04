@@ -25,7 +25,9 @@ void Client::slotConnectToServer()
         udpSocket->writeDatagram(QString("User want connect from out").toUtf8(), QHostAddress::Broadcast, 2222);  //отправляем данные по широковешательному адресу на порт 2222
         portThisClient += udpSocket->localPort();
         udpSocket->abort();
-        udpSocket->bind(QHostAddress::Broadcast, portThisClient); //задаём широковещательный адрес и порт на который сокет будет получать данные
+        //udpSocket->close();
+        //udpSocket->waitForDisconnected();
+        udpSocket->bind(portThisClient); //задаём широковещательный адрес и порт на который сокет будет получать данные
 
         tcpSocket = new QTcpSocket(this);
         connect (tcpSocket, SIGNAL (readyRead()), this, SLOT (slotReadingTcpData()));  //для получения и отображения данныx соединяем сигнал сокета со слотом
@@ -53,6 +55,8 @@ void Client:: slotReadingUDPData()  //чтение данных
     }
     ipServer = sender;
     qDebug()<<"IP: "<<ipServer.toString() + " Port: "+QString("%1").arg(portTcpServer);
+    //QThread::msleep(500);
+    qDebug() << "Try to connect to server by tcp";
     tcpSocket->connectToHost( ipServer, portTcpServer);   //соединяемся с сервером по протоколу Tcp
     const int Timeout = 5 * 1000;
     if (!tcpSocket->waitForConnected(Timeout))

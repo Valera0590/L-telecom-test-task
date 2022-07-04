@@ -1,5 +1,6 @@
 #ifndef SERVERLISTENER_H
 #define SERVERLISTENER_H
+
 #include <QUdpSocket>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -55,6 +56,5 @@ private slots:
     void sendToClient();
     void timeoutToSendDatabase();
 };
-
 
 #endif // SERVERLISTENER_H
